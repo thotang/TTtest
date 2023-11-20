@@ -29,7 +29,7 @@ jobs:
     uses: ./.github/workflows/terraform.yml
     with:
       target: test
-      resource_group_name: TVAksjonenNettbutikk-test-rg
+      resource_group_name: TVAksjonen-management-test-rg
       storage_account_name: terraformtestst
       storage_account_container: tfstate
     secrets: inherit
@@ -44,7 +44,7 @@ jobs:
   #   uses: ./.github/workflows/terraform.yml
   #   with:
   #     target: prod
-  #     resource_group_name: TVAksjonenNettbutikk-prod-rg
+  #     resource_group_name: TVAksjonen-management-prod-rg
   #     storage_account_name: terraformprodst
   #     storage_account_container: tfstate
   #   secrets: inherit
