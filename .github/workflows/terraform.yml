@@ -81,11 +81,11 @@ jobs:
     - name: Terraform Plan
       id: plan      
       run: terraform plan -no-color -out=deploy_plan.tfplan -var-file '${{inputs.target}}.tfvars' -var-file 'ip_whitelist.tfvars'
-      continue-on-error: true
+      # continue-on-error: true
     
-    - name: Handle Terraform Failure
-      if: steps.plan.outcome == 'failure' || steps.fmt.outcome == 'failure' || steps.validate.outcome == 'failure'
-      run: exit 1
+    # - name: Handle Terraform Failure
+    #   if: steps.plan.outcome == 'failure' || steps.fmt.outcome == 'failure' || steps.validate.outcome == 'failure'
+    #   run: exit 1
 
     - name: Terraform Apply
       id: apply

@@ -23,10 +23,10 @@ variable "sku" {
   default     = "P1v2"
 }
 
-# variable "whitelisted_ips" {
-#   type        = list(object({ name = string, start_ip_address = string, end_ip_address = string }))
-#   description = "List of IP adress ranges to whitelist"
-# }
+variable "whitelisted_ips" {
+  type        = list(object({ name = string, start_ip_address = string, end_ip_address = string }))
+  description = "List of IP adress ranges to whitelist"
+}
 
 # variable "sql_sku" {
 #   type        = string
