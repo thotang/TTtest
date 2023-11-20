@@ -1,0 +1,93 @@
+on:
+  workflow_call:
+    inputs:
+        target:
+          description: Environment that plan will be deployed in
+          required: true
+          type: string
+        resource_group_name:
+          description: Specify the Azure Resource Group where the backend storage account is hosted.
+          required: true
+          type: string
+        storage_account_name:
+          description: Specify the Azure Storage Account where the backend state is hosted.
+          required: true
+          type: string
+        storage_account_container:
+          description: Specify the Azure Storage Account container where backend Terraform state is hosted.
+          required: true
+          type: string
+
+    secrets:
+      CLIENT_ID:
+        required: true
+        description: Azure Client ID
+      CLIENT_SECRET:
+        required: true
+        description: Azure Client Secret
+      TENANT_id:
+        required: true
+        description: Azure Tenant ID
+      SUBSCRIPTION_ID:
+        required: true
+        description: Azure Subscription ID    
+
+jobs:
+  deploy-job:
+    name: "Deploy Terraform Job"
+    runs-on: ubuntu-latest
+    environment: ${{inputs.target}}
+    # concurrency:
+    #   group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.target }}
+    #   cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: "./infrastructure"
+        shell: bash
+    env:
+      TF_LOG: INFO
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: hashicorp/setup-terraform@v2
+
+    - name: Terraform fmt
+      id: fmt
+      run: terraform fmt -check
+      continue-on-error: true
+
+    - name: Terraform Init
+      id: init
+      run: |
+       terraform init \
+          --backend-config="storage_account_name=${{ inputs.storage_account_name }}" \
+          --backend-config="container_name=${{ inputs.storage_account_container }}" \
+          --backend-config="resource_group_name=${{ inputs.resource_group_name }}" \
+          --backend-config="key=terraform.tfstate" \
+
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate -no-color
+
+    - name: Terraform Plan
+      id: plan      
+      run: terraform plan -no-color -out=deploy_plan.tfplan -var-file '${{inputs.target}}.tfvars' -var-file 'ip_whitelist.tfvars'
+      continue-on-error: true
+    
+    - name: Handle Terraform Failure
+      if: steps.plan.outcome == 'failure' || steps.fmt.outcome == 'failure' || steps.validate.outcome == 'failure'
+      run: exit 1
+
+    - name: Terraform Apply
+      id: apply
+      if: github.event_name != 'pull_request'     
+      run: terraform apply -auto-approve -input=false deploy_plan.tfplan

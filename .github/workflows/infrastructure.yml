@@ -1,0 +1,50 @@
+name: Azure Terraform Infrastructure CI/CD
+
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "infrastructure/**"
+      - "!infrastructure/**.md"
+      - ".github/workflows/infrastructure.yml"
+      - ".github/workflows/terraform.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "infrastructure/**"
+      - "!infrastructure/**.md"
+      - ".github/workflows/infrastructure.yml"
+      - ".github/workflows/terraform.yml"
+
+jobs:
+  terraform-test:
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/terraform.yml
+    with:
+      target: test
+      resource_group_name: TVAksjonenNettbutikk-test-rg
+      storage_account_name: terraformtestst
+      storage_account_container: tfstate
+    secrets: inherit
+  # terraform-prod:
+  #   if: github.event_name != 'pull_request'
+  #   needs: terraform-test
+  #   permissions:
+  #     contents: read
+  #     id-token: write
+  #     issues: write
+  #     pull-requests: write
+  #   uses: ./.github/workflows/terraform.yml
+  #   with:
+  #     target: prod
+  #     resource_group_name: TVAksjonenNettbutikk-prod-rg
+  #     storage_account_name: terraformprodst
+  #     storage_account_container: tfstate
+  #   secrets: inherit
