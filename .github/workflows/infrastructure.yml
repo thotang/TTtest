@@ -29,8 +29,8 @@ jobs:
     uses: ./.github/workflows/terraform.yml
     with:
       target: test
-      resource_group_name: TVAksjonen-management-test-rg
-      storage_account_name: terraformtestst
+      resource_group_name: tf-state-test-rg
+      storage_account_name: tfstatetestsa
       storage_account_container: tfstate
     secrets: inherit
   # terraform-prod:
